@@ -1,5 +1,7 @@
 import axios from 'axios';
 import Notiflix from 'notiflix';
+import SimpleLightbox from 'simplelightbox';
+import 'simplelightbox/dist/simple-lightbox.min.css';
 
 const BASE_URL = 'https://pixabay.com/api/';
 const inputForm = document.querySelector('#search-form');
@@ -9,6 +11,12 @@ const loadBtn = document.querySelector('.load-more');
 loadBtn.classList.add('visually-hidden');
 let pageN = 1;
 let totalPics;
+
+let lightbox = new SimpleLightbox('.gallery a', {
+  captionsData: 'alt',
+  captionDelay: 250,
+  loop: false,
+});
 
 const searchParams = new URLSearchParams({
   key: '39314249-b9f637c3b6d2b2c91ffe81f29',
@@ -38,6 +46,7 @@ inputForm.addEventListener('submit', e => {
   gallery.innerHTML = '';
   pageN = 1;
   searchParams.set('page', pageN);
+  loadBtn.classList.add('visually-hidden');
 
   const { searchQuery } = e.currentTarget.elements;
 
@@ -48,17 +57,28 @@ inputForm.addEventListener('submit', e => {
 
   searchParams.set('q', searchQuery.value);
   createMarkup();
-
-  loadBtn.classList.remove('visually-hidden');
 });
 
 function createMarkup() {
   fetchPictures()
     .then(resp => {
+      Notiflix.Notify.success(`Hooray! We found ${resp.totalHits} images.`);
+
       let cards = resp.hits
-        .map(({ webformatURL, tags, likes, views, comments, downloads }) => {
-          return `<div class="photo-card">
-                    <img src="${webformatURL}" alt="${tags}" loading="lazy" />
+        .map(
+          ({
+            webformatURL,
+            tags,
+            likes,
+            views,
+            comments,
+            downloads,
+            largeImageURL,
+          }) => {
+            return `<div class="photo-card">
+                    <a href="${largeImageURL}">
+                      <img src="${webformatURL}" alt="${tags}" loading="lazy" />
+                    </a>
                     <div class="info">
                       <p class="info-item">
                         <b>Likes: </b>${likes}
@@ -74,14 +94,19 @@ function createMarkup() {
                       </p>
                     </div>
                   </div>`;
-        })
+          }
+        )
         .join('');
 
       gallery.insertAdjacentHTML('beforeend', cards);
 
       totalPics = resp.totalHits;
     })
-    .catch(error => console.log(error));
+    .catch(error => console.log(error))
+    .finally(() => {
+      loadBtn.classList.remove('visually-hidden');
+      lightbox.refresh();
+    });
 }
 
 loadBtn.addEventListener('click', () => {
