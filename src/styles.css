@@ -54,6 +54,7 @@ body {
 .info {
   display: flex;
   gap: 5px;
+  justify-content: space-around;
   border: solid 1px #ededed;
   border-top: none;
   box-shadow: rgba(0, 0, 0, 0.15) 1.95px 1.95px 2.6px;
@@ -63,6 +64,8 @@ body {
 
 .info-item {
   text-align: center;
+  display: flex;
+  flex-direction: column;
 }
 
 .load-more {

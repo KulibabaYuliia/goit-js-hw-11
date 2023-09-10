@@ -32,6 +32,8 @@ inputForm.addEventListener('submit', e => {
   searchParams.set('q', searchQuery.value);
   createMarkup();
 
+  loadBtn.classList.remove('visually-hidden');
+
   setTimeout(() => {
     Notiflix.Notify.success(`Hooray! We found ${totalPics} images.`);
   }, 1000);
@@ -57,16 +59,16 @@ function createMarkup() {
                     </a>
                     <div class="info">
                       <p class="info-item">
-                        <b>Likes: </b>${likes}
+                        <b>Likes:</b><span>${likes}</span>
                       </p>
                       <p class="info-item">
-                        <b>Views: </b>${views}
+                        <b>Views:</b><span>${views}</span>
                       </p>
                       <p class="info-item">
-                        <b>Comments: </b>${comments}
+                        <b>Comments:</b><span>${comments}</span>
                       </p>
                       <p class="info-item">
-                        <b>Downloads: </b>${downloads}
+                        <b>Downloads:</b><span>${downloads}</span>
                       </p>
                     </div>
                   </div>`;
@@ -77,7 +79,7 @@ function createMarkup() {
       gallery.insertAdjacentHTML('beforeend', cards);
 
       totalPics = resp.totalHits;
-      loadBtn.classList.remove('visually-hidden');
+      // loadBtn.classList.remove('visually-hidden');
     })
     .catch(error => console.log(error))
     .finally(() => {
@@ -90,6 +92,7 @@ loadBtn.addEventListener('click', () => {
   searchParams.set('page', pageN);
 
   let totalPages = totalPics / Number(searchParams.get('per_page'));
+
   if (pageN > totalPages) {
     loadBtn.classList.add('visually-hidden');
     Notiflix.Notify.failure(
