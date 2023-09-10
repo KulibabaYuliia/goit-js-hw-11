@@ -2,12 +2,18 @@ import Notiflix from 'notiflix';
 import SimpleLightbox from 'simplelightbox';
 import 'simplelightbox/dist/simple-lightbox.min.css';
 
-import { inputForm, gallery, loadBtn } from './js/refs.js';
+import { inputForm, gallery, target } from './js/refs.js';
 import { searchParams, fetchPictures } from './js/pixabayapi.js';
 
-loadBtn.classList.add('visually-hidden');
-let pageN = 1;
+let currentPage = 1;
 let totalPics;
+
+let options = {
+  root: null,
+  rootMargin: '300px',
+  threshold: 1.0,
+};
+let observer = new IntersectionObserver(onLoad, options);
 
 let lightbox = new SimpleLightbox('.gallery a', {
   captionsData: 'alt',
@@ -18,9 +24,8 @@ let lightbox = new SimpleLightbox('.gallery a', {
 inputForm.addEventListener('submit', e => {
   e.preventDefault();
   gallery.innerHTML = '';
-  pageN = 1;
-  searchParams.set('page', pageN);
-  loadBtn.classList.add('visually-hidden');
+  currentPage = 1;
+  searchParams.set('page', currentPage);
 
   const { searchQuery } = e.currentTarget.elements;
 
@@ -32,7 +37,7 @@ inputForm.addEventListener('submit', e => {
   searchParams.set('q', searchQuery.value);
   createMarkup();
 
-  loadBtn.classList.remove('visually-hidden');
+  observer.observe(target);
 
   setTimeout(() => {
     Notiflix.Notify.success(`Hooray! We found ${totalPics} images.`);
@@ -79,7 +84,6 @@ function createMarkup() {
       gallery.insertAdjacentHTML('beforeend', cards);
 
       totalPics = resp.totalHits;
-      // loadBtn.classList.remove('visually-hidden');
     })
     .catch(error => console.log(error))
     .finally(() => {
@@ -87,18 +91,21 @@ function createMarkup() {
     });
 }
 
-loadBtn.addEventListener('click', () => {
-  pageN += 1;
-  searchParams.set('page', pageN);
+function onLoad(entries, observer) {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      currentPage += 1;
+      searchParams.set('page', currentPage);
 
-  let totalPages = totalPics / Number(searchParams.get('per_page'));
+      createMarkup();
 
-  if (pageN > totalPages) {
-    loadBtn.classList.add('visually-hidden');
-    Notiflix.Notify.failure(
-      "We're sorry, but you've reached the end of search results."
-    );
-  }
-
-  createMarkup();
-});
+      let totalPages = totalPics / Number(searchParams.get('per_page'));
+      if (currentPage > totalPages) {
+        observer.unobserve(target);
+        Notiflix.Notify.failure(
+          "We're sorry, but you've reached the end of search results."
+        );
+      }
+    }
+  });
+}
