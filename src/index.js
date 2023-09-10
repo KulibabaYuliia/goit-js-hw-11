@@ -1,12 +1,9 @@
-import axios from 'axios';
 import Notiflix from 'notiflix';
 import SimpleLightbox from 'simplelightbox';
 import 'simplelightbox/dist/simple-lightbox.min.css';
 
-const BASE_URL = 'https://pixabay.com/api/';
-const inputForm = document.querySelector('#search-form');
-const gallery = document.querySelector('.gallery');
-const loadBtn = document.querySelector('.load-more');
+import { inputForm, gallery, loadBtn } from './js/refs.js';
+import { searchParams, fetchPictures } from './js/pixabayapi.js';
 
 loadBtn.classList.add('visually-hidden');
 let pageN = 1;
@@ -17,29 +14,6 @@ let lightbox = new SimpleLightbox('.gallery a', {
   captionDelay: 250,
   loop: false,
 });
-
-const searchParams = new URLSearchParams({
-  key: '39314249-b9f637c3b6d2b2c91ffe81f29',
-
-  image_type: 'photo',
-  orientation: 'horizontal',
-  safesearch: true,
-  per_page: 40,
-  page: 1,
-});
-
-async function fetchPictures() {
-  const resp = await axios.get(`${BASE_URL}?${searchParams}`);
-
-  if (resp.data.totalHits === 0) {
-    Notiflix.Notify.failure(
-      'Sorry, there are no images matching your search query. Please try again.'
-    );
-    throw new Error();
-  }
-
-  return resp.data;
-}
 
 inputForm.addEventListener('submit', e => {
   e.preventDefault();
@@ -57,13 +31,15 @@ inputForm.addEventListener('submit', e => {
 
   searchParams.set('q', searchQuery.value);
   createMarkup();
+
+  setTimeout(() => {
+    Notiflix.Notify.success(`Hooray! We found ${totalPics} images.`);
+  }, 1000);
 });
 
 function createMarkup() {
   fetchPictures()
     .then(resp => {
-      Notiflix.Notify.success(`Hooray! We found ${resp.totalHits} images.`);
-
       let cards = resp.hits
         .map(
           ({
@@ -101,10 +77,10 @@ function createMarkup() {
       gallery.insertAdjacentHTML('beforeend', cards);
 
       totalPics = resp.totalHits;
+      loadBtn.classList.remove('visually-hidden');
     })
     .catch(error => console.log(error))
     .finally(() => {
-      loadBtn.classList.remove('visually-hidden');
       lightbox.refresh();
     });
 }
