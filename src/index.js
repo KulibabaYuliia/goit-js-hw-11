@@ -29,7 +29,7 @@ inputForm.addEventListener('submit', e => {
 
   const { searchQuery } = e.currentTarget.elements;
 
-  if (!searchQuery.value) {
+  if (!searchQuery.value.trim()) {
     Notiflix.Notify.failure("Field search shouldn't be empty.");
     return;
   }
