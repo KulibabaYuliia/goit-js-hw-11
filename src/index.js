@@ -24,8 +24,10 @@ let lightbox = new SimpleLightbox('.gallery a', {
 
 inputForm.addEventListener('submit', e => {
   e.preventDefault();
-  gallery.innerHTML = '';
+  observer.unobserve(target);
+  totalPics = 0;
   currentPage = 1;
+  gallery.innerHTML = '';
   searchParams.set('page', currentPage);
 
   const { searchQuery } = e.currentTarget.elements;
@@ -38,17 +40,18 @@ inputForm.addEventListener('submit', e => {
   searchParams.set('q', searchQuery.value);
   createMarkup();
 
-  observer.observe(target);
-
   setTimeout(() => {
     if (totalPics) {
       Notiflix.Notify.success(`Hooray! We found ${totalPics} images.`);
+
+      observer.observe(target);
     }
   }, 1000);
 });
 
 function createMarkup() {
   loadingEl.classList.remove('visually-hidden');
+
   fetchPictures()
     .then(resp => {
       let cards = resp.hits
@@ -89,7 +92,10 @@ function createMarkup() {
 
       totalPics = resp.totalHits;
     })
-    .catch(error => console.log(error))
+    .catch(error => {
+      console.log(error);
+      observer.unobserve(target);
+    })
     .finally(() => {
       lightbox.refresh();
       loadingEl.classList.add('visually-hidden');
