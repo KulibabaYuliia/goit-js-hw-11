@@ -2,9 +2,10 @@ import Notiflix from 'notiflix';
 import SimpleLightbox from 'simplelightbox';
 import 'simplelightbox/dist/simple-lightbox.min.css';
 
-import { inputForm, gallery, target } from './js/refs.js';
+import { inputForm, gallery, target, loadingEl } from './js/refs.js';
 import { searchParams, fetchPictures } from './js/pixabayapi.js';
 
+loadingEl.classList.add('visually-hidden');
 let currentPage = 1;
 let totalPics;
 
@@ -40,11 +41,14 @@ inputForm.addEventListener('submit', e => {
   observer.observe(target);
 
   setTimeout(() => {
-    Notiflix.Notify.success(`Hooray! We found ${totalPics} images.`);
+    if (totalPics) {
+      Notiflix.Notify.success(`Hooray! We found ${totalPics} images.`);
+    }
   }, 1000);
 });
 
 function createMarkup() {
+  loadingEl.classList.remove('visually-hidden');
   fetchPictures()
     .then(resp => {
       let cards = resp.hits
@@ -88,6 +92,7 @@ function createMarkup() {
     .catch(error => console.log(error))
     .finally(() => {
       lightbox.refresh();
+      loadingEl.classList.add('visually-hidden');
     });
 }
 
